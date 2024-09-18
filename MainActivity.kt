@@ -22,9 +22,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             EAC11Theme {
-                // Setup Navigation
+                // Añadimos el navegador para movernos entre las cuatro pantallas
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "nameScreen") {
+                    // Ponemos variables ID para ejecutar cada pantalla
                     composable(route = "nameScreen") { NameScreen(navController = navController) }
                     composable(route = "ageScreen") { AgeScreen(navController = navController) }
                     composable(route = "destinationScreen") { DestinationScreen(navController = navController) }
@@ -35,20 +36,28 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Pantalla para escribir el nombre
 @Composable
 fun NameScreen(navController: NavController) {
+    // Creamos variable mutableState
     var nom by remember { mutableStateOf("") }
 
+    // En la columna añadimos el espacio para escribir
     Column(modifier = Modifier.padding(16.dp)) {
         TextField(
             value = nom,
             onValueChange = { newText -> nom = newText },
             label = { Text("Nom") }
         )
+
+        // Accion cuando se pulsa el boton
         Button(onClick = {
+            // Guardamos el valor introducido de nombre
             navController.currentBackStackEntry?.savedStateHandle?.set("nom", nom)
+            // Navegamos a la siguiente pantalla pulsando el boton
             navController.navigate("ageScreen")
                          },
+            // Solo esta activo si no esta vacio
             enabled = nom.isNotEmpty()
         ) {
             Text("Continuar")
@@ -56,9 +65,11 @@ fun NameScreen(navController: NavController) {
     }
 }
 
+//Pantalla de la edad
 @Composable
 fun AgeScreen(navController: NavController) {
     var edat by remember { mutableStateOf("") }
+    //Recordamos la variable de la anterior pantalla
     val nom = navController.previousBackStackEntry?.savedStateHandle?.get<String>("nom") ?: ""
 
     Column(modifier = Modifier.padding(16.dp)) {
@@ -68,6 +79,7 @@ fun AgeScreen(navController: NavController) {
             label = { Text("Edat") }
         )
         Button(onClick = {
+            // Guardamos los dos valores porque sino perderiamos el nombre
             navController.currentBackStackEntry?.savedStateHandle?.set("nom", nom)
             navController.currentBackStackEntry?.savedStateHandle?.set("edat", edat)
             navController.navigate("destinationScreen")
@@ -79,18 +91,23 @@ fun AgeScreen(navController: NavController) {
     }
 }
 
+// Pantalla desplegable
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DestinationScreen(navController: NavController) {
+    // Variable para verificar si se desplega
     var expanded by remember { mutableStateOf(false) }
     var selectedDestination by remember { mutableStateOf("") }
+    // Lista de los destinos
     val destinations = listOf("Mart", "Lluna", "Júpiter", "Saturn")
 
-
+    //Recordamos las variables de las pantallas anteriores
     val nom = navController.previousBackStackEntry?.savedStateHandle?.get<String>("nom") ?: ""
     val edat = navController.previousBackStackEntry?.savedStateHandle?.get<String>("edat") ?: ""
 
+
     Column(modifier = Modifier.padding(16.dp)) {
+        // Desplegable
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -98,6 +115,7 @@ fun DestinationScreen(navController: NavController) {
             TextField(
                 value = selectedDestination,
                 onValueChange = {},
+                // Solo se puede elegir
                 readOnly = true,
                 label = { Text("Seleccionar destinació") },
                 trailingIcon = {
@@ -109,6 +127,7 @@ fun DestinationScreen(navController: NavController) {
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
+                // Cogemos la lista para que se introduzca el valor que pulsamos en la varible del texto
                 destinations.forEach { destination ->
                     DropdownMenuItem(
                         text = { Text(destination) },
@@ -121,6 +140,7 @@ fun DestinationScreen(navController: NavController) {
             }
         }
         Button(onClick = {
+            // Guardamos todos los valores
             navController.currentBackStackEntry?.savedStateHandle?.set("nom", nom)
             navController.currentBackStackEntry?.savedStateHandle?.set("edat", edat)
             navController.currentBackStackEntry?.savedStateHandle?.set("selectedDestination", selectedDestination)
@@ -133,24 +153,27 @@ fun DestinationScreen(navController: NavController) {
     }
 }
 
+//Pantalla del resumen
 @Composable
 fun SummaryScreen(navController: NavController) {
-    // Retrieve values from savedStateHandle
+    // Recuperamos los valores introducidos en cada pantalla por su identificador String
     val nom = navController.previousBackStackEntry?.savedStateHandle?.get<String>("nom") ?: ""
     val edat = navController.previousBackStackEntry?.savedStateHandle?.get<String>("edat") ?: ""
     val selectedDestination = navController.previousBackStackEntry?.savedStateHandle?.get<String>("selectedDestination") ?: ""
 
+    //Mostramos los datos a partir de las varaibles
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "Resum:")
         Text(text = "Nom: $nom")
         Text(text = "Edat: $edat")
         Text(text = "Destinació Espacial: $selectedDestination")
+
+        //Boton para resetear el formulario y sobreescribir los datos
         Button(onClick = { navController.popBackStack("nameScreen", inclusive = false) }) {
             Text("Iniciar de nuevo")
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
